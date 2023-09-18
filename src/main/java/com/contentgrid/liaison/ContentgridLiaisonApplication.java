@@ -1,0 +1,34 @@
+package com.contentgrid.liaison;
+
+import com.contentgrid.liaison.config.LiaisonProperties;
+import com.contentgrid.liaison.kubernetes.KubernetesDiscovery;
+import io.fabric8.kubernetes.client.KubernetesClientBuilder;
+import io.fabric8.kubernetes.client.impl.KubernetesClientImpl;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+
+@SpringBootApplication
+@EnableConfigurationProperties(LiaisonProperties.class)
+public class ContentgridLiaisonApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(ContentgridLiaisonApplication.class, args);
+    }
+
+    @Bean
+    KubernetesDiscovery discovery(LiaisonProperties properties) {
+        return new KubernetesDiscovery(properties.getDiscovery(), new KubernetesClientBuilder().build());
+    }
+
+    @Bean
+    ApplicationRunner runner(KubernetesDiscovery discovery) {
+        return args -> {
+            discovery.discover();
+        };
+    }
+
+
+}
