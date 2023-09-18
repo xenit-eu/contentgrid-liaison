@@ -2,6 +2,7 @@ package com.contentgrid.liaison;
 
 import com.contentgrid.liaison.config.LiaisonProperties;
 import com.contentgrid.liaison.kubernetes.KubernetesDiscovery;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.kubernetes.client.impl.KubernetesClientImpl;
 import org.springframework.boot.ApplicationRunner;
@@ -19,8 +20,13 @@ public class ContentgridLiaisonApplication {
     }
 
     @Bean
-    KubernetesDiscovery discovery(LiaisonProperties properties) {
-        return new KubernetesDiscovery(properties.getDiscovery(), new KubernetesClientBuilder().build());
+    KubernetesDiscovery discovery(LiaisonProperties properties, KubernetesClient client) {
+        return new KubernetesDiscovery(properties.getDiscovery(), client);
+    }
+
+    @Bean
+    KubernetesClient k8sClient() {
+        return new KubernetesClientBuilder().build();
     }
 
     @Bean
