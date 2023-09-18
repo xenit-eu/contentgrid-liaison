@@ -1,0 +1,7 @@
+
+liaison:
+  discovery:
+    namespace: default
+    labels:
+      '[app.contentgrid.com/service-type]': webapp
+    resync-interval-seconds: 30
