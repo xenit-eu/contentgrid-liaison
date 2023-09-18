@@ -37,8 +37,9 @@ tasks.named('test') {
 }
 
 bootBuildImage {
-	imageName = "docker.contentgrid.com/liaison:${project.version}"
-	tags = "${project.version}".endsWith('SNAPSHOT') ? [ 'docker.contentgrid.com/liaison:SNAPSHOT' ] : null
+	def repository = "ghcr.io/xenit-eu/contentgrid-liaison"
+	imageName = "${repository}:${project.version}"
+	tags = "${project.version}".endsWith('SNAPSHOT') ? [ "${repository}:SNAPSHOT" ] : null
 
 	docker {
 		publishRegistry {
