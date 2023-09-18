@@ -30,7 +30,7 @@ public class KubernetesDiscovery {
                     @Override
                     public void onAdd(ConfigMap cm) {
                         for (String domain : cm.getData().get(DOMAINS_KEY).split(DOMAINS_SEPARATOR)) {
-                            log.trace("Registered domain {}", domain);
+                            log.debug("Registered domain {}", domain);
                             var webappCfg = new WebappConfiguration(
                                     cm.getData().get(API_URL_KEY),
                                     cm.getData().get(AUTHORITY_KEY),
@@ -49,7 +49,7 @@ public class KubernetesDiscovery {
                     @Override
                     public void onDelete(ConfigMap cm, boolean deletedFinalStateUnknown) {
                         for (String domain : cm.getData().get(DOMAINS_KEY).split(DOMAINS_SEPARATOR)) {
-                            log.trace("Deleting domain {}", domain);
+                            log.debug("Deleting domain {}", domain);
                             configmaps.remove(domain);
                         }
                     }
