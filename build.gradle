@@ -24,6 +24,7 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'io.fabric8:kubernetes-client:6.8.1'
+	implementation "org.bouncycastle:bcpkix-jdk15on:1.70"
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
@@ -35,7 +36,6 @@ dependencies {
 	testImplementation "org.testcontainers:testcontainers"
 	testImplementation "org.testcontainers:junit-jupiter"
 	testImplementation "org.testcontainers:k3s"
-	testImplementation "org.bouncycastle:bcpkix-jdk15on:1.70"
 	testImplementation 'org.awaitility:awaitility'
 }
 

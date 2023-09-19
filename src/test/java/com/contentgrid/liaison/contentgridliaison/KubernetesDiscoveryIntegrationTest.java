@@ -30,7 +30,7 @@ import org.testcontainers.utility.DockerImageName;
 
 @Tag("integration")
 @Testcontainers
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest
 public class KubernetesDiscoveryIntegrationTest {
 
     @Container
