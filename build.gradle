@@ -24,12 +24,19 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'io.fabric8:kubernetes-client:6.8.1'
+	implementation "org.bouncycastle:bcpkix-jdk15on:1.70"
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
+
+	testImplementation platform('org.testcontainers:testcontainers-bom:1.19.0')
+	testImplementation "org.testcontainers:testcontainers"
+	testImplementation "org.testcontainers:junit-jupiter"
+	testImplementation "org.testcontainers:k3s"
+	testImplementation 'org.awaitility:awaitility'
 }
 
 tasks.named('test') {
