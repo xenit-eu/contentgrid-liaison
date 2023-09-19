@@ -16,11 +16,11 @@ public class KubernetesDiscovery {
 
     private final ConcurrentHashMap<String, WebappConfiguration> configmaps = new ConcurrentHashMap<>();
 
-    private final String DOMAINS_KEY = "contentgrid.routing.domains";
-    private final String DOMAINS_SEPARATOR = ",";
-    private final String API_URL_KEY = "contentgrid.api.url";
-    private final String AUTHORITY_KEY = "contentgrid.oidc.authority";
-    private final String CLIENT_ID_KEY = "contentgrid.oidc.client";
+    private final static String DOMAINS_KEY = "contentgrid.routing.domains";
+    private final static String DOMAINS_SEPARATOR = ",";
+    private final static String API_URL_KEY = "contentgrid.api.url";
+    private final static String ISSUER_KEY = "contentgrid.oidc.issuer";
+    private final static String CLIENT_ID_KEY = "contentgrid.oidc.client";
 
     public void discover() {
         client.configMaps()
@@ -33,7 +33,7 @@ public class KubernetesDiscovery {
                             log.debug("Registered domain {}", domain);
                             var webappCfg = new WebappConfiguration(
                                     cm.getData().get(API_URL_KEY),
-                                    cm.getData().get(AUTHORITY_KEY),
+                                    cm.getData().get(ISSUER_KEY),
                                     cm.getData().get(CLIENT_ID_KEY)
                             );
                             configmaps.put(domain, webappCfg);

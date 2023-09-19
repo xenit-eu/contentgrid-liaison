@@ -81,7 +81,7 @@ public class KubernetesDiscoveryIntegrationTest {
                         .addToData(Map.of(
                                 "contentgrid.routing.domains", "123.contentgrid.app",
                                 "contentgrid.api.url", "https://123.contentgrid.cloud",
-                                "contentgrid.oidc.authority", "123-authority",
+                                "contentgrid.oidc.issuer", "123-authority",
                                 "contentgrid.oidc.client", "123-client"
                         ))
                         .build()
@@ -112,7 +112,7 @@ public class KubernetesDiscoveryIntegrationTest {
                         .addToData(Map.of(
                                 "contentgrid.routing.domains", "456.contentgrid.app",
                                 "contentgrid.api.url", "https://456.contentgrid.cloud",
-                                "contentgrid.oidc.authority", "456-authority",
+                                "contentgrid.oidc.issuer", "456-authority",
                                 "contentgrid.oidc.client", "456-client"
                         ))
                         .build()
@@ -130,7 +130,7 @@ public class KubernetesDiscoveryIntegrationTest {
                         .addToData(Map.of(
                                 "contentgrid.routing.domains", "456.contentgrid.app",
                                 "contentgrid.api.url", "https://456.contentgrid.cloud",
-                                "contentgrid.oidc.authority", "456-authority",
+                                "contentgrid.oidc.issuer", "456-authority",
                                 "contentgrid.oidc.client", "456-client"
                         ))
                         .build()
@@ -156,7 +156,7 @@ public class KubernetesDiscoveryIntegrationTest {
                         .addToData(Map.of(
                                 "contentgrid.routing.domains", "456.contentgrid.example",
                                 "contentgrid.api.url", "https://456.contentgrid.cloud",
-                                "contentgrid.oidc.authority", "456-authority",
+                                "contentgrid.oidc.issuer", "456-authority",
                                 "contentgrid.oidc.client", "456-client"
                         ))
                         .build()
@@ -184,7 +184,7 @@ public class KubernetesDiscoveryIntegrationTest {
                         .addToData(Map.of(
                                 "contentgrid.routing.domains", "456.contentgrid.app",
                                 "contentgrid.api.url", "https://456.contentgrid.cloud",
-                                "contentgrid.oidc.authority", "456-authority",
+                                "contentgrid.oidc.issuer", "456-authority",
                                 "contentgrid.oidc.client", "456-client"
                         ))
                         .build()
