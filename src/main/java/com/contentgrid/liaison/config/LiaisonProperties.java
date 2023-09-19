@@ -11,8 +11,15 @@ public class LiaisonProperties {
 
     private LiaisonDiscoveryProperties discovery = new LiaisonDiscoveryProperties();
 
+
     @Data
     public static class LiaisonDiscoveryProperties {
+        private ConfigmapDiscoveryProperties webapp;
+        private ConfigmapDiscoveryProperties gateway;
+    }
+
+    @Data
+    public static class ConfigmapDiscoveryProperties {
         private String namespace;
         private Map<String, String> labels = new HashMap<>();
         private int resyncIntervalSeconds;

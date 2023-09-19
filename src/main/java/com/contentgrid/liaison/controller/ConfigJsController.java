@@ -20,14 +20,13 @@ public class ConfigJsController {
     public ResponseEntity<String> getConfigJs(ServerHttpRequest request) {
 
         var host = request.getURI().getHost();
-        var config = discovery.findByDomain(host);
-        if (config == null) {
-            return ResponseEntity.notFound().build();
-        }
+        var maybeConfig = discovery.findByDomain(host);
+        return maybeConfig
+                .map(config -> ResponseEntity.ok()
+                        .contentType(JAVASCRIPT)
+                        .body(makeConfigJs(config)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
 
-        return ResponseEntity.ok()
-                .contentType(JAVASCRIPT)
-                .body(makeConfigJs(config));
     }
 
     private String makeConfigJs(WebappConfiguration config) {

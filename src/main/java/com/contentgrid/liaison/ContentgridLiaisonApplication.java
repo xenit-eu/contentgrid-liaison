@@ -30,9 +30,15 @@ public class ContentgridLiaisonApplication {
     }
 
     @Bean
-    ApplicationRunner runner(KubernetesDiscovery discovery) {
+    ApplicationRunner runnerWebapps(KubernetesDiscovery discovery) {
         return args -> {
-            discovery.discover();
+            discovery.discoverWebapp();
+        };
+    }
+    @Bean
+    ApplicationRunner runnerGateway(KubernetesDiscovery discovery) {
+        return args -> {
+            discovery.discoverGateway();
         };
     }
 
