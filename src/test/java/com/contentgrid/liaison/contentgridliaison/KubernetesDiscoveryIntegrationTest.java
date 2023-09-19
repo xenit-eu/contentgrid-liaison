@@ -77,6 +77,7 @@ public class KubernetesDiscoveryIntegrationTest {
                             .withNamespace("default")
                             .withName("123-webapp-cfg")
                             .addToLabels("app.contentgrid.com/service-type", "webapp")
+                            .addToLabels("app.contentgrid.com/application-id", "123")
                         .endMetadata()
                         .addToData(Map.of(
                                 "contentgrid.routing.domains", "123.contentgrid.app",
@@ -84,6 +85,18 @@ public class KubernetesDiscoveryIntegrationTest {
                                 "contentgrid.oidc.issuer", "123-authority",
                                 "contentgrid.oidc.client", "123-client"
                         ))
+                        .build()
+        ).create();
+
+        this.kubernetesClient.configMaps().resource(
+                new ConfigMapBuilder()
+                        .editOrNewMetadata()
+                            .withNamespace("default")
+                            .withName("123-gw-cfg")
+                            .addToLabels("app.contentgrid.com/service-type", "gateway")
+                            .addToLabels("app.contentgrid.com/application-id", "123")
+                        .endMetadata()
+                        .addToData("contentgrid.routing.domains", "123.contentgrid.cloud")
                         .build()
         ).create();
 
@@ -101,13 +114,25 @@ public class KubernetesDiscoveryIntegrationTest {
 
     @Test
     public void unhappyConfigMapTest() {
+        // gateway configmap gets to be correct
+        this.kubernetesClient.configMaps().resource(
+                new ConfigMapBuilder()
+                        .editOrNewMetadata()
+                            .withNamespace("default")
+                            .withName("456-gw-cfg")
+                            .addToLabels("app.contentgrid.com/service-type", "gateway")
+                            .addToLabels("app.contentgrid.com/application-id", "456")
+                        .endMetadata()
+                        .addToData("contentgrid.routing.domains", "456.contentgrid.cloud")
+                        .build()
+        ).create();
         // Wrong service type
         this.kubernetesClient.configMaps().resource(
                 new ConfigMapBuilder()
                         .editOrNewMetadata()
                         .withNamespace("default")
                         .withName("webapp-cfg-1")
-                        .addToLabels("app.contentgrid.com/service-type", "gateway")
+                        .addToLabels("app.contentgrid.com/service-type", "foo")
                         .endMetadata()
                         .addToData(Map.of(
                                 "contentgrid.routing.domains", "456.contentgrid.app",
@@ -177,13 +202,13 @@ public class KubernetesDiscoveryIntegrationTest {
         this.kubernetesClient.configMaps().resource(
                 new ConfigMapBuilder()
                         .editOrNewMetadata()
-                        .withNamespace("default")
-                        .withName("webapp-cfg-5")
-                        .addToLabels("app.contentgrid.com/service-type", "webapp")
+                            .withNamespace("default")
+                            .withName("webapp-cfg-5")
+                            .addToLabels("app.contentgrid.com/service-type", "webapp")
+                            .addToLabels("app.contentgrid.com/application-id", "456")
                         .endMetadata()
                         .addToData(Map.of(
                                 "contentgrid.routing.domains", "456.contentgrid.app",
-                                "contentgrid.api.url", "https://456.contentgrid.cloud",
                                 "contentgrid.oidc.issuer", "456-authority",
                                 "contentgrid.oidc.client", "456-client"
                         ))

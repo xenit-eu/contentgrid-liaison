@@ -2,6 +2,7 @@ package com.contentgrid.liaison.contentgridliaison;
 
 import com.contentgrid.liaison.kubernetes.KubernetesDiscovery;
 import com.contentgrid.liaison.kubernetes.WebappConfiguration;
+import java.util.Optional;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,8 +31,8 @@ class ContentgridLiaisonApplicationTests {
                 .configureClient()
                 .build();
 
-        Mockito.when(discovery.findByDomain("123.contentgrid.app"))
-                .thenReturn(new WebappConfiguration("http://123.contentgrid.cloud", "123-authority", "123-client"));
+        Mockito.when(discovery.findByDomain("123.contentgrid.app")).thenReturn(Optional.of(
+                        new WebappConfiguration("123", "123-authority", "123-client", "http://123.contentgrid.cloud")));
     }
 
     @Test

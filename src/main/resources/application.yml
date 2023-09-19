@@ -1,10 +1,15 @@
-
 liaison:
   discovery:
-    namespace: default
-    labels:
-      '[app.contentgrid.com/service-type]': webapp
-    resync-interval-seconds: 30
+    webapp:
+      namespace: default
+      labels:
+        '[app.contentgrid.com/service-type]': webapp
+      resync-interval-seconds: 30
+    gateway:
+      namespace: default
+      labels:
+        '[app.contentgrid.com/service-type]': gateway
+      resync-interval-seconds: 30
 
 management.endpoints.web.exposure.include: '*'
 management.server.port: '8081'
