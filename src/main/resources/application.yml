@@ -5,3 +5,6 @@ liaison:
     labels:
       '[app.contentgrid.com/service-type]': webapp
     resync-interval-seconds: 30
+
+management.endpoints.web.exposure.include: '*'
+management.server.port: '8081'
