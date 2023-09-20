@@ -33,7 +33,7 @@ public class ConfigJsController {
         return """
                 window.contentGridConfig = {
                     v1: {
-                        baseUrl: "%s",
+                        apiBaseUrl: "%s",
                         oidc: {
                             authority: "%s",
                             client_id: "%s",
