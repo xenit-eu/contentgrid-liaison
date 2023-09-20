@@ -31,11 +31,13 @@ public class ConfigJsController {
 
     private String makeConfigJs(WebappConfiguration config) {
         return """
-                window.config = {
-                    baseUrl: "%s",
-                    oidc: {
-                        authority: "%s",
-                        client_id: "%s",
+                window.contentGridConfig = {
+                    v1: {
+                        baseUrl: "%s",
+                        oidc: {
+                            authority: "%s",
+                            client_id: "%s",
+                        }
                     }
                 };
                 """.formatted(config.apiUrl(), config.authority(), config.clientId());
