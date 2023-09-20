@@ -3,7 +3,6 @@ package com.contentgrid.liaison.contentgridliaison;
 import static io.fabric8.kubernetes.client.Config.fromKubeconfig;
 
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
-import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
@@ -15,7 +14,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -113,7 +111,7 @@ public class KubernetesDiscoveryIntegrationTest {
     }
 
     @Test
-    public void unhappyConfigMapTest() {
+    public void unhappyWebappConfigMapTest() {
         // gateway configmap gets to be correct
         this.kubernetesClient.configMaps().resource(
                 new ConfigMapBuilder()
@@ -133,6 +131,7 @@ public class KubernetesDiscoveryIntegrationTest {
                         .withNamespace("default")
                         .withName("webapp-cfg-1")
                         .addToLabels("app.contentgrid.com/service-type", "foo")
+                        .addToLabels("app.contentgrid.com/application-id", "456")
                         .endMetadata()
                         .addToData(Map.of(
                                 "contentgrid.routing.domains", "456.contentgrid.app",
@@ -151,6 +150,7 @@ public class KubernetesDiscoveryIntegrationTest {
                         .withNamespace("foo")
                         .withName("webapp-cfg-2")
                         .addToLabels("app.contentgrid.com/service-type", "webapp")
+                        .addToLabels("app.contentgrid.com/application-id", "456")
                         .endMetadata()
                         .addToData(Map.of(
                                 "contentgrid.routing.domains", "456.contentgrid.app",
@@ -167,6 +167,7 @@ public class KubernetesDiscoveryIntegrationTest {
                         .withNamespace("default")
                         .withName("webapp-cfg-3")
                         .addToLabels("app.contentgrid.com/service-type", "webapp")
+                        .addToLabels("app.contentgrid.com/application-id", "456")
                         .endMetadata()
                         .build()
         ).create();
@@ -223,4 +224,107 @@ public class KubernetesDiscoveryIntegrationTest {
                         .expectStatus().isOk()
         );
     }
+
+    @Test
+    public void unhappyGatewayConfigMapTest() {
+        // webapp configmap gets to be correct
+        this.kubernetesClient.configMaps().resource(
+                new ConfigMapBuilder()
+                        .editOrNewMetadata()
+                        .withNamespace("default")
+                        .withName("789-webapp-cfg")
+                        .addToLabels("app.contentgrid.com/service-type", "webapp")
+                        .addToLabels("app.contentgrid.com/application-id", "789")
+                        .endMetadata()
+                        .addToData(Map.of(
+                                "contentgrid.routing.domains", "789.contentgrid.app",
+                                "contentgrid.api.url", "https://789.contentgrid.cloud",
+                                "contentgrid.oidc.issuer", "789-authority",
+                                "contentgrid.oidc.client", "789-client"
+                        ))
+                        .build()
+        ).create();
+        // Wrong service type
+        this.kubernetesClient.configMaps().resource(
+                new ConfigMapBuilder()
+                        .editOrNewMetadata()
+                        .withNamespace("default")
+                        .withName("gw-cfg-1")
+                        .addToLabels("app.contentgrid.com/service-type", "goatway")
+                        .addToLabels("app.contentgrid.com/application-id", "789")
+                        .endMetadata()
+                        .addToData("contentgrid.routing.domains", "789.contentgrid.cloud")
+                        .build()
+        ).create();
+        // Wrong namespace
+        this.kubernetesClient.namespaces().resource(
+                new NamespaceBuilder().withNewMetadata().withName("bar").endMetadata().build()).create();
+        this.kubernetesClient.configMaps().resource(
+                new ConfigMapBuilder()
+                        .editOrNewMetadata()
+                        .withNamespace("bar")
+                        .withName("gw-cfg-2")
+                        .addToLabels("app.contentgrid.com/service-type", "gateway")
+                        .addToLabels("app.contentgrid.com/application-id", "789")
+                        .endMetadata()
+                        .addToData("contentgrid.routing.domains", "789.contentgrid.cloud")
+                        .build()
+        ).create();
+        // No data
+        this.kubernetesClient.configMaps().resource(
+                new ConfigMapBuilder()
+                        .editOrNewMetadata()
+                        .withNamespace("default")
+                        .withName("gw-cfg-3")
+                        .addToLabels("app.contentgrid.com/service-type", "gateway")
+                        .addToLabels("app.contentgrid.com/application-id", "789")
+                        .endMetadata()
+                        .build()
+        ).create();
+        // Empty domain
+        this.kubernetesClient.configMaps().resource(
+                new ConfigMapBuilder()
+                        .editOrNewMetadata()
+                        .withNamespace("default")
+                        .withName("gw-cfg-4")
+                        .addToLabels("app.contentgrid.com/service-type", "gateway")
+                        .addToLabels("app.contentgrid.com/application-id", "789")
+                        .endMetadata()
+                        .addToData("contentgrid.routing.domains", "")
+                        .build()
+        ).create();
+
+        // verify that none of those invalid configmaps got registered for 789.contentgrid.app
+
+        Awaitility.await().pollDelay(Duration.ofSeconds(1)).untilAsserted(() ->
+                this.webTestClient.get()
+                        .uri("http://789.contentgrid.app/config.js")
+                        .header("Host", "789.contentgrid.app")
+                        .exchange()
+                        .expectStatus().isNotFound()
+        );
+
+        // verify that we didn't break the informer and can still register a correct configmap
+
+        this.kubernetesClient.configMaps().resource(
+                new ConfigMapBuilder()
+                        .editOrNewMetadata()
+                        .withNamespace("default")
+                        .withName("gw-cfg-5")
+                        .addToLabels("app.contentgrid.com/service-type", "gateway")
+                        .addToLabels("app.contentgrid.com/application-id", "789")
+                        .endMetadata()
+                        .addToData("contentgrid.routing.domains", "789.contentgrid.cloud")
+                        .build()
+        ).create();
+
+        Awaitility.await().pollDelay(Duration.ofSeconds(1)).untilAsserted(() ->
+                this.webTestClient.get()
+                        .uri("http://789.contentgrid.app/config.js")
+                        .header("Host", "789.contentgrid.app")
+                        .exchange()
+                        .expectStatus().isOk()
+        );
+    }
+
 }

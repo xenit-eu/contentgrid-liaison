@@ -72,8 +72,12 @@ public class KubernetesDiscovery {
                 .inform(new ResourceEventHandler<ConfigMap>() {
                     @Override
                     public void onAdd(ConfigMap cm) {
-                        var firstDomain = cm.getData().get(DOMAINS_KEY).split(DOMAINS_SEPARATOR)[0];
+                        var firstDomain = cm.getData().getOrDefault(DOMAINS_KEY, "").split(DOMAINS_SEPARATOR)[0];
                         var appId = cm.getMetadata().getLabels().get(APPLICATION_ID_LABEL);
+                        if (firstDomain.isEmpty() || appId == null || appId.isEmpty()) {
+                            log.debug("Incomplete configmap {}, not registering", cm.getFullResourceName());
+                            return;
+                        }
                         gatewayCfgmaps.put(appId, new GatewayCfgmap(appId, "https://" + firstDomain));
                         log.debug("Registered backend domain {}", firstDomain);
                     }
