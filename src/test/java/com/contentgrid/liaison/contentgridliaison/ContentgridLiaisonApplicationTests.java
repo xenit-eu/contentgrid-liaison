@@ -44,7 +44,7 @@ class ContentgridLiaisonApplicationTests {
                 .expectStatus().isOk()
                 .expectHeader().contentType("text/javascript")
                 .expectBody(new ParameterizedTypeReference<String>() {}).value(s ->
-                        Assertions.assertThat(s).contains("baseUrl: \"http://123.contentgrid.cloud\""));
+                        Assertions.assertThat(s).contains("apiBaseUrl: \"http://123.contentgrid.cloud\""));
     }
 
     @Test
