@@ -41,6 +41,12 @@ public class ContentgridLiaisonApplication {
             discovery.discoverGateway();
         };
     }
+    @Bean
+    ApplicationRunner runnerUiConfig(KubernetesDiscovery discovery) {
+        return args -> {
+            discovery.discoverUiConfig();
+        };
+    }
 
 
 }

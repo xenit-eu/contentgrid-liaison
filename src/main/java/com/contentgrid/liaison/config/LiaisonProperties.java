@@ -16,6 +16,7 @@ public class LiaisonProperties {
     public static class LiaisonDiscoveryProperties {
         private ConfigmapDiscoveryProperties webapp;
         private ConfigmapDiscoveryProperties gateway;
+        private ConfigmapDiscoveryProperties uiConfig;
     }
 
     @Data

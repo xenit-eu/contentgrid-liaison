@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import java.time.Duration;
 import java.util.Map;
 import org.assertj.core.api.Assertions;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.k3s.K3sContainer;
-import org.awaitility.Awaitility;
 import org.testcontainers.utility.DockerImageName;
 
 @Tag("integration")
@@ -327,4 +327,70 @@ public class KubernetesDiscoveryIntegrationTest {
         );
     }
 
+    @Test
+    public void discoverNewUiConfigTest() {
+        this.webTestClient.get()
+                .uri("http://000.contentgrid.app/config.js")
+                .header("Host", "000.contentgrid.app")
+                .exchange()
+                .expectStatus().isNotFound();
+
+        this.kubernetesClient.configMaps().resource(
+                new ConfigMapBuilder()
+                        .editOrNewMetadata()
+                        .withNamespace("default")
+                        .withName("000-webapp-cfg")
+                        .addToLabels("app.contentgrid.com/service-type", "webapp")
+                        .addToLabels("app.contentgrid.com/application-id", "000")
+                        .endMetadata()
+                        .addToData(Map.of(
+                                "contentgrid.routing.domains", "000.contentgrid.app",
+                                "contentgrid.api.url", "https://000.contentgrid.cloud",
+                                "contentgrid.oidc.issuer", "000-authority",
+                                "contentgrid.oidc.client", "000-client"
+                        ))
+                        .build()
+        ).create();
+
+        this.kubernetesClient.configMaps().resource(
+                new ConfigMapBuilder()
+                        .editOrNewMetadata()
+                        .withNamespace("default")
+                        .withName("000-gw-cfg")
+                        .addToLabels("app.contentgrid.com/service-type", "gateway")
+                        .addToLabels("app.contentgrid.com/application-id", "000")
+                        .endMetadata()
+                        .addToData("contentgrid.routing.domains", "000.contentgrid.cloud")
+                        .build()
+        ).create();
+
+        this.kubernetesClient.configMaps().resource(
+                new ConfigMapBuilder()
+                        .editOrNewMetadata()
+                        .withNamespace("default")
+                        .withName("000-ui-cfg")
+                        .addToLabels("app.contentgrid.com/service-type", "ui-config")
+                        .addToLabels("app.contentgrid.com/application-id", "000")
+                        .endMetadata()
+                        .addToData("contentgrid.routing.domains", "000.contentgrid.app")
+                        .addToData("contentgrid.ui.config", """
+                                { "worker": { "views": [ {"type":"vertical", "elements": [
+                                    { "type": "control", "options": {"name":"first_name"} },
+                                    { "type": "control", "options": {"name":"last_name"} }
+                                ]}]}}
+                                """)
+                        .build()
+        ).create();
+
+        Awaitility.await().atMost(Duration.ofSeconds(1)).untilAsserted(() ->
+                this.webTestClient.get()
+                        .uri("http://000.contentgrid.app/config.js")
+                        .header("Host", "000.contentgrid.app")
+                        .exchange()
+                        .expectStatus().isOk()
+                        .expectHeader().contentType("text/javascript")
+                        .expectBody(new ParameterizedTypeReference<String>() {}).value(s ->
+                                Assertions.assertThat(s).contains("\"name\":\"last_name\""))
+        );
+    }
 }

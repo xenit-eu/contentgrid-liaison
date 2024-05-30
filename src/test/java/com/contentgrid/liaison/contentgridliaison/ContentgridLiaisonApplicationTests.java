@@ -32,7 +32,11 @@ class ContentgridLiaisonApplicationTests {
                 .build();
 
         Mockito.when(discovery.findByDomain("123.contentgrid.app")).thenReturn(Optional.of(
-                        new WebappConfiguration("123", "123-authority", "123-client", "http://123.contentgrid.cloud")));
+                new WebappConfiguration("123", "123-authority", "123-client", "http://123.contentgrid.cloud", null)));
+        Mockito.when(discovery.findByDomain("456.contentgrid.app")).thenReturn(Optional.of(
+                new WebappConfiguration("456", "456-authority", "456-client", "http://456.contentgrid.cloud", """
+                        { "worker": { "views": [ {"type":"vertical", "elements": []} ] } }
+                        """)));
     }
 
     @Test
@@ -45,6 +49,18 @@ class ContentgridLiaisonApplicationTests {
                 .expectHeader().contentType("text/javascript")
                 .expectBody(new ParameterizedTypeReference<String>() {}).value(s ->
                         Assertions.assertThat(s).contains("apiBaseUrl: \"http://123.contentgrid.cloud\""));
+    }
+
+    @Test
+    void getUiConfigTest() {
+        client.get()
+                .uri("http://456.contentgrid.app/config.js")
+                .header("Host", "456.contentgrid.app")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("text/javascript")
+                .expectBody(new ParameterizedTypeReference<String>() {}).value(s ->
+                        Assertions.assertThat(s).contains("\"elements\": []"));
     }
 
     @Test

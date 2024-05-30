@@ -10,6 +10,13 @@ liaison:
       labels:
         '[app.contentgrid.com/service-type]': gateway
       resync-interval-seconds: 30
+    uiConfig:
+      namespace: default
+      labels:
+        '[app.contentgrid.com/service-type]': ui-config
+      resync-interval-seconds: 30
+
+logging.level.com.contentgrid.liaison: DEBUG
 
 management.endpoints.web.exposure.include: '*'
 management.server.port: '8081'

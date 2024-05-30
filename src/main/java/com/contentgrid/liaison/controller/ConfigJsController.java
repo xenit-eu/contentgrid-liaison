@@ -30,16 +30,31 @@ public class ConfigJsController {
     }
 
     private String makeConfigJs(WebappConfiguration config) {
-        return """
-                window.contentGridConfig = {
-                    v1: {
-                        apiBaseUrl: "%s",
-                        oidc: {
-                            authority: "%s",
-                            client_id: "%s",
+        if (config.uiConfig() != null) {
+            // Simply dumping json into javascript via string templating is icky, but will probably be fine for now
+            return """
+                    window.contentGridConfig = {
+                        v1: {
+                            apiBaseUrl: "%s",
+                            oidc: {
+                                authority: "%s",
+                                client_id: "%s"
+                            },
+                            uiConfig: %s
                         }
-                    }
-                };
-                """.formatted(config.apiUrl(), config.authority(), config.clientId());
+                    };""".formatted(config.apiUrl(), config.authority(), config.clientId(), config.uiConfig());
+        } else {
+            return """
+                    window.contentGridConfig = {
+                        v1: {
+                            apiBaseUrl: "%s",
+                            oidc: {
+                                authority: "%s",
+                                client_id: "%s",
+                            }
+                        }
+                    };
+                    """.formatted(config.apiUrl(), config.authority(), config.clientId());
+        }
     }
 }

@@ -18,6 +18,7 @@ public class KubernetesDiscovery {
 
     private final ConcurrentHashMap<String, WebappCfgmap> webappCfgmaps = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, GatewayCfgmap> gatewayCfgmaps = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, UiConfigCfgmap> uiConfigCfgmaps = new ConcurrentHashMap<>();
 
     private final static String DOMAINS_KEY = "contentgrid.routing.domains";
     private final static String DOMAINS_SEPARATOR = ",";
@@ -25,6 +26,7 @@ public class KubernetesDiscovery {
     private final static String ISSUER_KEY = "contentgrid.oidc.issuer";
     private final static String CLIENT_ID_KEY = "contentgrid.oidc.client";
     private final static String API_URL_KEY = "contentgrid.api.url";
+    private final static String UI_CONFIG = "contentgrid.ui.config";
 
     public void discoverWebapp() {
         //
@@ -97,11 +99,49 @@ public class KubernetesDiscovery {
 
     }
 
+    public void discoverUiConfig() {
+        //
+        // service-type: ui-config
+        //
+        client.configMaps()
+                .inNamespace(discoveryProperties.getUiConfig().getNamespace())
+                .withLabels(discoveryProperties.getUiConfig().getLabels())
+                .inform(new ResourceEventHandler<ConfigMap>() {
+                    @Override
+                    public void onAdd(ConfigMap cm) {
+                        for (String domain : cm.getData().get(DOMAINS_KEY).split(DOMAINS_SEPARATOR)) {
+                            log.debug("Registered UI config for {}", domain);
+                            var uiConfig = new UiConfigCfgmap(
+                                    cm.getMetadata().getLabels().get(APPLICATION_ID_LABEL),
+                                    domain,
+                                    cm.getData().get(UI_CONFIG)
+                            );
+                            uiConfigCfgmaps.put(domain, uiConfig);
+                        }
+                    }
+
+                    @Override
+                    public void onUpdate(ConfigMap oldObj, ConfigMap newObj) {
+                        this.onAdd(newObj);
+                    }
+
+                    @Override
+                    public void onDelete(ConfigMap cm, boolean deletedFinalStateUnknown) {
+                        for (String domain : cm.getData().get(DOMAINS_KEY).split(DOMAINS_SEPARATOR)) {
+                            log.debug("Deleting UI config for domain {}", domain);
+                            uiConfigCfgmaps.remove(domain);
+                        }
+                    }
+                });
+    }
+
     public Optional<WebappConfiguration> findByDomain(@NonNull String domain) {
         return Optional.ofNullable(this.webappCfgmaps.get(domain))
                 .flatMap(wa -> Optional.ofNullable(wa.applicationId())
                         .map(this.gatewayCfgmaps::get)
-                        .map(gw -> WebappConfiguration.from(wa, gw)));
+                        .map(gw -> Optional.ofNullable(this.uiConfigCfgmaps.get(domain))
+                                .map(ui -> WebappConfiguration.from(wa, gw, ui))
+                                .orElse(WebappConfiguration.from(wa, gw))));
     }
 
 
