@@ -1,3 +1,3 @@
 package com.contentgrid.liaison.kubernetes;
 
-public record UiConfigCfgmap(String applicationId, String frontendUrl, String payload) {}
+public record UiConfigCfgmap(String applicationId, String payload) {}

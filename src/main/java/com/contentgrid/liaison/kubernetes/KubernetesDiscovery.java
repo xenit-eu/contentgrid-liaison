@@ -52,7 +52,6 @@ public class KubernetesDiscovery {
                                 log.debug("Registered UI config for {}", domain);
                                 var uiConfig = new UiConfigCfgmap(
                                         cm.getMetadata().getLabels().get(APPLICATION_ID_LABEL),
-                                        domain,
                                         cm.getData().get(UI_CONFIG)
                                 );
                                 uiConfigCfgmaps.put(domain, uiConfig);
