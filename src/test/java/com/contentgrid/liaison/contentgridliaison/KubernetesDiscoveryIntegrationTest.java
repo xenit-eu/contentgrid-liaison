@@ -369,7 +369,7 @@ public class KubernetesDiscoveryIntegrationTest {
                         .editOrNewMetadata()
                         .withNamespace("default")
                         .withName("000-ui-cfg")
-                        .addToLabels("app.contentgrid.com/service-type", "ui-config")
+                        .addToLabels("app.contentgrid.com/service-type", "webapp")
                         .addToLabels("app.contentgrid.com/application-id", "000")
                         .endMetadata()
                         .addToData("contentgrid.routing.domains", "000.contentgrid.app")

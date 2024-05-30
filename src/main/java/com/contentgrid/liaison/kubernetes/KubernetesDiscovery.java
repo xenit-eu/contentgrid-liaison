@@ -39,13 +39,24 @@ public class KubernetesDiscovery {
                     @Override
                     public void onAdd(ConfigMap cm) {
                         for (String domain : cm.getData().get(DOMAINS_KEY).split(DOMAINS_SEPARATOR)) {
-                            log.debug("Registered frontend domain {}", domain);
-                            var webappCfg = new WebappCfgmap(
-                                    cm.getMetadata().getLabels().get(APPLICATION_ID_LABEL),
-                                    cm.getData().get(ISSUER_KEY),
-                                    cm.getData().get(CLIENT_ID_KEY)
-                            );
-                            webappCfgmaps.put(domain, webappCfg);
+                            if (cm.getData().get(ISSUER_KEY) != null && cm.getData().get(CLIENT_ID_KEY) != null) {
+                                log.debug("Registered frontend domain {}", domain);
+                                var webappCfg = new WebappCfgmap(
+                                        cm.getMetadata().getLabels().get(APPLICATION_ID_LABEL),
+                                        cm.getData().get(ISSUER_KEY),
+                                        cm.getData().get(CLIENT_ID_KEY)
+                                );
+                                webappCfgmaps.put(domain, webappCfg);
+                            }
+                            if (cm.getData().get(UI_CONFIG) != null) {
+                                log.debug("Registered UI config for {}", domain);
+                                var uiConfig = new UiConfigCfgmap(
+                                        cm.getMetadata().getLabels().get(APPLICATION_ID_LABEL),
+                                        domain,
+                                        cm.getData().get(UI_CONFIG)
+                                );
+                                uiConfigCfgmaps.put(domain, uiConfig);
+                            }
                         }
 
                     }
@@ -97,42 +108,6 @@ public class KubernetesDiscovery {
                 }, discoveryProperties.getGateway().getResyncIntervalSeconds() * 1000L);
 
 
-    }
-
-    public void discoverUiConfig() {
-        //
-        // service-type: ui-config
-        //
-        client.configMaps()
-                .inNamespace(discoveryProperties.getUiConfig().getNamespace())
-                .withLabels(discoveryProperties.getUiConfig().getLabels())
-                .inform(new ResourceEventHandler<ConfigMap>() {
-                    @Override
-                    public void onAdd(ConfigMap cm) {
-                        for (String domain : cm.getData().get(DOMAINS_KEY).split(DOMAINS_SEPARATOR)) {
-                            log.debug("Registered UI config for {}", domain);
-                            var uiConfig = new UiConfigCfgmap(
-                                    cm.getMetadata().getLabels().get(APPLICATION_ID_LABEL),
-                                    domain,
-                                    cm.getData().get(UI_CONFIG)
-                            );
-                            uiConfigCfgmaps.put(domain, uiConfig);
-                        }
-                    }
-
-                    @Override
-                    public void onUpdate(ConfigMap oldObj, ConfigMap newObj) {
-                        this.onAdd(newObj);
-                    }
-
-                    @Override
-                    public void onDelete(ConfigMap cm, boolean deletedFinalStateUnknown) {
-                        for (String domain : cm.getData().get(DOMAINS_KEY).split(DOMAINS_SEPARATOR)) {
-                            log.debug("Deleting UI config for domain {}", domain);
-                            uiConfigCfgmaps.remove(domain);
-                        }
-                    }
-                });
     }
 
     public Optional<WebappConfiguration> findByDomain(@NonNull String domain) {
