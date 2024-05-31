@@ -7,9 +7,18 @@ import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Value;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -37,6 +46,7 @@ public class KubernetesDiscoveryIntegrationTest {
 
     @TestConfiguration
     public static class K3sClientConfiguration {
+
         @Bean
         @Primary
         KubernetesClient testKubernetesClient() {
@@ -62,7 +72,7 @@ public class KubernetesDiscoveryIntegrationTest {
 
 
     @Test
-    public void discoverNewConfigmapTest() {
+    public void discoverNewConfigmapTest() throws ScriptException {
         this.webTestClient.get()
                 .uri("http://123.contentgrid.app/config.js")
                 .header("Host", "123.contentgrid.app")
@@ -72,14 +82,13 @@ public class KubernetesDiscoveryIntegrationTest {
         this.kubernetesClient.configMaps().resource(
                 new ConfigMapBuilder()
                         .editOrNewMetadata()
-                            .withNamespace("default")
-                            .withName("123-webapp-cfg")
-                            .addToLabels("app.contentgrid.com/service-type", "webapp")
-                            .addToLabels("app.contentgrid.com/application-id", "123")
+                        .withNamespace("default")
+                        .withName("123-webapp-cfg")
+                        .addToLabels("app.contentgrid.com/service-type", "webapp")
+                        .addToLabels("app.contentgrid.com/application-id", "123")
                         .endMetadata()
                         .addToData(Map.of(
                                 "contentgrid.routing.domains", "123.contentgrid.app",
-                                "contentgrid.api.url", "https://123.contentgrid.cloud",
                                 "contentgrid.oidc.issuer", "123-authority",
                                 "contentgrid.oidc.client", "123-client"
                         ))
@@ -89,10 +98,10 @@ public class KubernetesDiscoveryIntegrationTest {
         this.kubernetesClient.configMaps().resource(
                 new ConfigMapBuilder()
                         .editOrNewMetadata()
-                            .withNamespace("default")
-                            .withName("123-gw-cfg")
-                            .addToLabels("app.contentgrid.com/service-type", "gateway")
-                            .addToLabels("app.contentgrid.com/application-id", "123")
+                        .withNamespace("default")
+                        .withName("123-gw-cfg")
+                        .addToLabels("app.contentgrid.com/service-type", "gateway")
+                        .addToLabels("app.contentgrid.com/application-id", "123")
                         .endMetadata()
                         .addToData("contentgrid.routing.domains", "123.contentgrid.cloud")
                         .build()
@@ -103,11 +112,50 @@ public class KubernetesDiscoveryIntegrationTest {
                         .uri("http://123.contentgrid.app/config.js")
                         .header("Host", "123.contentgrid.app")
                         .exchange()
-                        .expectStatus().isOk()
-                        .expectHeader().contentType("text/javascript")
-                        .expectBody(new ParameterizedTypeReference<String>() {}).value(s ->
-                                Assertions.assertThat(s).contains("123-authority"))
-        );
+                        .expectStatus().isOk());
+
+        String configJS = this.webTestClient.get()
+                .uri("http://123.contentgrid.app/config.js")
+                .header("Host", "123.contentgrid.app")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("text/javascript")
+                .expectBody(new ParameterizedTypeReference<String>() {
+                }).returnResult().getResponseBody();
+
+        executeJS(configJS, window -> {
+            Assertions.assertThat(window.getMember("contentGridConfig")
+                    .getMember("v1")
+                    .getMember("oidc")
+                    .getMember("authority")
+                    .asString()).isEqualTo("123-authority");
+
+            Assertions.assertThat(window.getMember("contentGridConfig")
+                    .getMember("v1")
+                    .getMember("oidc")
+                    .getMember("client_id")
+                    .asString()).isEqualTo("123-client");
+
+            Assertions.assertThat(window.getMember("contentGridConfig")
+                    .getMember("v1")
+                    .getMember("apiBaseUrl")
+                    .asString()).isEqualTo("https://123.contentgrid.cloud");
+        });
+
+    }
+
+    private void executeJS(String configJS, Consumer<Value> windowAssertion) {
+        // Initialize GraalVM context
+        try (Context context = Context.create()) {
+            context.eval("js", "var window = {};");
+            // Evaluate the JavaScript code
+            context.eval("js", configJS);
+
+            // Retrieve the window object
+            var window = context.getBindings("js").getMember("window");
+
+            windowAssertion.accept(window);
+        }
     }
 
     @Test
@@ -116,10 +164,10 @@ public class KubernetesDiscoveryIntegrationTest {
         this.kubernetesClient.configMaps().resource(
                 new ConfigMapBuilder()
                         .editOrNewMetadata()
-                            .withNamespace("default")
-                            .withName("456-gw-cfg")
-                            .addToLabels("app.contentgrid.com/service-type", "gateway")
-                            .addToLabels("app.contentgrid.com/application-id", "456")
+                        .withNamespace("default")
+                        .withName("456-gw-cfg")
+                        .addToLabels("app.contentgrid.com/service-type", "gateway")
+                        .addToLabels("app.contentgrid.com/application-id", "456")
                         .endMetadata()
                         .addToData("contentgrid.routing.domains", "456.contentgrid.cloud")
                         .build()
@@ -203,10 +251,10 @@ public class KubernetesDiscoveryIntegrationTest {
         this.kubernetesClient.configMaps().resource(
                 new ConfigMapBuilder()
                         .editOrNewMetadata()
-                            .withNamespace("default")
-                            .withName("webapp-cfg-5")
-                            .addToLabels("app.contentgrid.com/service-type", "webapp")
-                            .addToLabels("app.contentgrid.com/application-id", "456")
+                        .withNamespace("default")
+                        .withName("webapp-cfg-5")
+                        .addToLabels("app.contentgrid.com/service-type", "webapp")
+                        .addToLabels("app.contentgrid.com/application-id", "456")
                         .endMetadata()
                         .addToData(Map.of(
                                 "contentgrid.routing.domains", "456.contentgrid.app",
@@ -389,8 +437,39 @@ public class KubernetesDiscoveryIntegrationTest {
                         .exchange()
                         .expectStatus().isOk()
                         .expectHeader().contentType("text/javascript")
-                        .expectBody(new ParameterizedTypeReference<String>() {}).value(s ->
-                                Assertions.assertThat(s).contains("\"name\":\"last_name\""))
         );
+
+        String configJS = this.webTestClient.get()
+                .uri("http://000.contentgrid.app/config.js")
+                .header("Host", "000.contentgrid.app")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(new ParameterizedTypeReference<String>() {}).returnResult().getResponseBody();
+
+        executeJS(configJS, window -> {
+            Assertions.assertThat(window.getMember("contentGridConfig")
+                    .getMember("v1")
+                    .getMember("uiConfig")
+                    .getMember("worker")
+                    .getMember("views")
+                    .getArrayElement(0)
+                    .getMember("elements")
+                    .getArrayElement(1)
+                    .getMember("options")
+                    .getMember("name")
+                    .asString()).isEqualTo("last_name");
+
+            Assertions.assertThat(window.getMember("contentGridConfig")
+                    .getMember("v1")
+                    .getMember("uiConfig")
+                    .getMember("worker")
+                    .getMember("views")
+                    .getArrayElement(0)
+                    .getMember("elements")
+                    .getArrayElement(0)
+                    .getMember("options")
+                    .getMember("name")
+                    .asString()).isEqualTo("first_name");
+        });
     }
 }

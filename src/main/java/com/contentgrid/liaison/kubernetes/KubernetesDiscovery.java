@@ -25,7 +25,6 @@ public class KubernetesDiscovery {
     private final static String APPLICATION_ID_LABEL = "app.contentgrid.com/application-id";
     private final static String ISSUER_KEY = "contentgrid.oidc.issuer";
     private final static String CLIENT_ID_KEY = "contentgrid.oidc.client";
-    private final static String API_URL_KEY = "contentgrid.api.url";
     private final static String UI_CONFIG = "contentgrid.ui.config";
 
     public void discoverWebapp() {
