@@ -144,6 +144,150 @@ public class KubernetesDiscoveryIntegrationTest {
 
     }
 
+    @Test
+    public void discoverUpdatesAndDeletesTest() {
+        this.webTestClient.get()
+                .uri("http://321.contentgrid.app/config.js")
+                .header("Host", "321.contentgrid.app")
+                .exchange()
+                .expectStatus().isNotFound();
+
+        // First version
+
+        this.kubernetesClient.configMaps().resource(
+                new ConfigMapBuilder()
+                        .editOrNewMetadata()
+                        .withNamespace("default")
+                        .withName("321-webapp-cfg")
+                        .addToLabels("app.contentgrid.com/service-type", "webapp")
+                        .addToLabels("app.contentgrid.com/application-id", "321")
+                        .endMetadata()
+                        .addToData(Map.of(
+                                "contentgrid.routing.domains", "321.contentgrid.app",
+                                "contentgrid.oidc.issuer", "321-foo-authority",
+                                "contentgrid.oidc.client", "321-foo-client"
+                        ))
+                        .build()
+        ).create();
+
+        this.kubernetesClient.configMaps().resource(
+                new ConfigMapBuilder()
+                        .editOrNewMetadata()
+                        .withNamespace("default")
+                        .withName("321-gw-cfg")
+                        .addToLabels("app.contentgrid.com/service-type", "gateway")
+                        .addToLabels("app.contentgrid.com/application-id", "321")
+                        .endMetadata()
+                        .addToData("contentgrid.routing.domains", "321-foo.contentgrid.cloud")
+                        .build()
+        ).create();
+
+        Awaitility.await().atMost(Duration.ofSeconds(1)).untilAsserted(() ->
+                this.webTestClient.get()
+                        .uri("http://321.contentgrid.app/config.js")
+                        .header("Host", "321.contentgrid.app")
+                        .exchange()
+                        .expectStatus().isOk());
+
+        String configJS = this.webTestClient.get()
+                .uri("http://321.contentgrid.app/config.js")
+                .header("Host", "321.contentgrid.app")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("text/javascript")
+                .expectBody(new ParameterizedTypeReference<String>() {})
+                .returnResult().getResponseBody();
+
+        executeJS(configJS, window -> {
+            Assertions.assertThat(window.getMember("contentGridConfig")
+                    .getMember("v1")
+                    .getMember("oidc")
+                    .getMember("authority")
+                    .asString()).isEqualTo("321-foo-authority");
+
+            Assertions.assertThat(window.getMember("contentGridConfig")
+                    .getMember("v1")
+                    .getMember("apiBaseUrl")
+                    .asString()).isEqualTo("https://321-foo.contentgrid.cloud");
+        });
+
+        // Updated version
+
+        this.kubernetesClient.configMaps().resource(
+                new ConfigMapBuilder()
+                        .editOrNewMetadata()
+                        .withNamespace("default")
+                        .withName("321-webapp-cfg")
+                        .addToLabels("app.contentgrid.com/service-type", "webapp")
+                        .addToLabels("app.contentgrid.com/application-id", "321")
+                        .endMetadata()
+                        .addToData(Map.of(
+                                "contentgrid.routing.domains", "321.contentgrid.app",
+                                "contentgrid.oidc.issuer", "321-authority",
+                                "contentgrid.oidc.client", "321-client"
+                        ))
+                        .build()
+        ).update();
+
+        this.kubernetesClient.configMaps().resource(
+                new ConfigMapBuilder()
+                        .editOrNewMetadata()
+                        .withNamespace("default")
+                        .withName("321-gw-cfg")
+                        .addToLabels("app.contentgrid.com/service-type", "gateway")
+                        .addToLabels("app.contentgrid.com/application-id", "321")
+                        .endMetadata()
+                        .addToData("contentgrid.routing.domains", "321.contentgrid.cloud")
+                        .build()
+        ).update();
+
+        Awaitility.await().atMost(Duration.ofSeconds(1)).untilAsserted(() ->
+                this.webTestClient.get()
+                        .uri("http://321.contentgrid.app/config.js")
+                        .header("Host", "321.contentgrid.app")
+                        .exchange()
+                        .expectStatus().isOk()
+                        .expectBody(new ParameterizedTypeReference<String>() {}).value(s ->
+                                Assertions.assertThat(s).contains("321-client")));
+
+        String configJsUpdated = this.webTestClient.get()
+                .uri("http://321.contentgrid.app/config.js")
+                .header("Host", "321.contentgrid.app")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("text/javascript")
+                .expectBody(new ParameterizedTypeReference<String>() {})
+                .returnResult().getResponseBody();
+
+        executeJS(configJsUpdated, window -> {
+            Assertions.assertThat(window.getMember("contentGridConfig")
+                    .getMember("v1")
+                    .getMember("oidc")
+                    .getMember("authority")
+                    .asString()).isEqualTo("321-authority");
+
+            Assertions.assertThat(window.getMember("contentGridConfig")
+                    .getMember("v1")
+                    .getMember("apiBaseUrl")
+                    .asString()).isEqualTo("https://321.contentgrid.cloud");
+        });
+
+        // Deletion
+
+        this.kubernetesClient.configMaps()
+                .inNamespace("default")
+                .withLabel("app.contentgrid.com/application-id", "321")
+                .delete();
+
+        Awaitility.await().atMost(Duration.ofSeconds(1)).untilAsserted(() ->
+                this.webTestClient.get()
+                        .uri("http://321.contentgrid.app/config.js")
+                        .header("Host", "321.contentgrid.app")
+                        .exchange()
+                        .expectStatus().isNotFound());
+    }
+
+
     private void executeJS(String configJS, Consumer<Value> windowAssertion) {
         // Initialize GraalVM context
         try (Context context = Context.create()) {
