@@ -18,13 +18,14 @@ public class KubernetesDiscovery {
 
     private final ConcurrentHashMap<String, WebappCfgmap> webappCfgmaps = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, GatewayCfgmap> gatewayCfgmaps = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, UiConfigCfgmap> uiConfigCfgmaps = new ConcurrentHashMap<>();
 
     private final static String DOMAINS_KEY = "contentgrid.routing.domains";
     private final static String DOMAINS_SEPARATOR = ",";
     private final static String APPLICATION_ID_LABEL = "app.contentgrid.com/application-id";
     private final static String ISSUER_KEY = "contentgrid.oidc.issuer";
     private final static String CLIENT_ID_KEY = "contentgrid.oidc.client";
-    private final static String API_URL_KEY = "contentgrid.api.url";
+    private final static String UI_CONFIG = "contentgrid.ui.config";
 
     public void discoverWebapp() {
         //
@@ -37,13 +38,23 @@ public class KubernetesDiscovery {
                     @Override
                     public void onAdd(ConfigMap cm) {
                         for (String domain : cm.getData().get(DOMAINS_KEY).split(DOMAINS_SEPARATOR)) {
-                            log.debug("Registered frontend domain {}", domain);
-                            var webappCfg = new WebappCfgmap(
-                                    cm.getMetadata().getLabels().get(APPLICATION_ID_LABEL),
-                                    cm.getData().get(ISSUER_KEY),
-                                    cm.getData().get(CLIENT_ID_KEY)
-                            );
-                            webappCfgmaps.put(domain, webappCfg);
+                            if (cm.getData().get(ISSUER_KEY) != null && cm.getData().get(CLIENT_ID_KEY) != null) {
+                                log.debug("Registered frontend domain {}", domain);
+                                var webappCfg = new WebappCfgmap(
+                                        cm.getMetadata().getLabels().get(APPLICATION_ID_LABEL),
+                                        cm.getData().get(ISSUER_KEY),
+                                        cm.getData().get(CLIENT_ID_KEY)
+                                );
+                                webappCfgmaps.put(domain, webappCfg);
+                            }
+                            if (cm.getData().get(UI_CONFIG) != null) {
+                                log.debug("Registered UI config for {}", domain);
+                                var uiConfig = new UiConfigCfgmap(
+                                        cm.getMetadata().getLabels().get(APPLICATION_ID_LABEL),
+                                        cm.getData().get(UI_CONFIG)
+                                );
+                                uiConfigCfgmaps.put(domain, uiConfig);
+                            }
                         }
 
                     }
@@ -101,7 +112,9 @@ public class KubernetesDiscovery {
         return Optional.ofNullable(this.webappCfgmaps.get(domain))
                 .flatMap(wa -> Optional.ofNullable(wa.applicationId())
                         .map(this.gatewayCfgmaps::get)
-                        .map(gw -> WebappConfiguration.from(wa, gw)));
+                        .map(gw -> Optional.ofNullable(this.uiConfigCfgmaps.get(domain))
+                                .map(ui -> WebappConfiguration.from(wa, gw, ui))
+                                .orElse(WebappConfiguration.from(wa, gw))));
     }
 
 

@@ -11,5 +11,6 @@ liaison:
         '[app.contentgrid.com/service-type]': gateway
       resync-interval-seconds: 30
 
+
 management.endpoints.web.exposure.include: '*'
 management.server.port: '8081'

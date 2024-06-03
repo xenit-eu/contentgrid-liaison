@@ -36,10 +36,12 @@ public class ConfigJsController {
                         apiBaseUrl: "%s",
                         oidc: {
                             authority: "%s",
-                            client_id: "%s",
-                        }
+                            client_id: "%s"
+                        },
+                        uiConfig: %s
                     }
-                };
-                """.formatted(config.apiUrl(), config.authority(), config.clientId());
+                };""".formatted(config.apiUrl(), config.authority(), config.clientId(),
+                // Simply dumping json into javascript via string templating is icky, but will probably be fine for now
+                config.uiConfig());
     }
 }
