@@ -38,7 +38,7 @@ dependencies {
 	testImplementation "org.testcontainers:junit-jupiter"
 	testImplementation "org.testcontainers:k3s"
 	testImplementation 'org.awaitility:awaitility'
-	testImplementation group: 'org.graalvm.js', name: 'js', version: '23.0.4'
+	testImplementation group: 'org.graalvm.js', name: 'js', version: '23.0.5'
 	testImplementation group: 'org.graalvm.js', name: 'js-scriptengine', version: '23.1.3'
 }
 
