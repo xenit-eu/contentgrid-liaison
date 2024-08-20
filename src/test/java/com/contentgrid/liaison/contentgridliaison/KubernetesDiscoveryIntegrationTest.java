@@ -41,8 +41,7 @@ import org.testcontainers.utility.DockerImageName;
 public class KubernetesDiscoveryIntegrationTest {
 
     @Container
-    private static final K3sContainer K8S = new K3sContainer(DockerImageName.parse("rancher/k3s:latest"))
-            .withCommand("server", "--disable=traefik");
+    private static final K3sContainer K8S = new K3sContainer(DockerImageName.parse("rancher/k3s:latest"));
 
     @TestConfiguration
     public static class K3sClientConfiguration {
