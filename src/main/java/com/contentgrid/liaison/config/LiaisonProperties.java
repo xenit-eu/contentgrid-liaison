@@ -10,6 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class LiaisonProperties {
 
     private LiaisonDiscoveryProperties discovery = new LiaisonDiscoveryProperties();
+    private Map<String, String> additionalProperties = new HashMap<>();
 
 
     @Data
