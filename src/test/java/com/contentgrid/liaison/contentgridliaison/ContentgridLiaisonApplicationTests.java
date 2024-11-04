@@ -1,5 +1,7 @@
 package com.contentgrid.liaison.contentgridliaison;
 
+import static com.contentgrid.liaison.contentgridliaison.KubernetesDiscoveryIntegrationTest.executeJS;
+
 import com.contentgrid.liaison.config.LiaisonProperties;
 import com.contentgrid.liaison.kubernetes.KubernetesDiscovery;
 import com.contentgrid.liaison.kubernetes.WebappConfiguration;
@@ -69,15 +71,16 @@ class ContentgridLiaisonApplicationTests {
                 .expectStatus().isOk()
                 .expectHeader().contentType("text/javascript")
                 .expectBody(new ParameterizedTypeReference<String>() {}).value(s ->
-                        // order is not consistent
-                        Assertions.assertThat(s).containsAnyOf("""
-                                        foo: "bar",
-                                        renditionUriTemplate: "https://renditions.contentgrid.cloud/get/pdf{?url}",
-                                """, """
-                                        renditionUriTemplate: "https://renditions.contentgrid.cloud/get/pdf{?url}",
-                                        foo: "bar",
-                                """
-                                ));
+                        executeJS(s, window -> {
+                            Assertions.assertThat(window.getMember("contentGridConfig")
+                                    .getMember("v1")
+                                    .getMember("foo")
+                                    .asString()).isEqualTo("bar");
+                            Assertions.assertThat(window.getMember("contentGridConfig")
+                                    .getMember("v1")
+                                    .getMember("renditionUriTemplate")
+                                    .asString()).isEqualTo("https://renditions.contentgrid.cloud/get/pdf{?url}");
+                        }));
     }
 
     @Test
