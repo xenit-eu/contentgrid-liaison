@@ -1,7 +1,9 @@
 package com.contentgrid.liaison.controller;
 
+import com.contentgrid.liaison.config.LiaisonProperties;
 import com.contentgrid.liaison.kubernetes.KubernetesDiscovery;
 import com.contentgrid.liaison.kubernetes.WebappConfiguration;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,7 @@ public class ConfigJsController {
     private final MediaType JAVASCRIPT = MediaType.parseMediaType("text/javascript");
 
     private final KubernetesDiscovery discovery;
+    private final LiaisonProperties properties;
 
     @GetMapping("/config.js")
     public ResponseEntity<String> getConfigJs(ServerHttpRequest request) {
@@ -38,10 +41,17 @@ public class ConfigJsController {
                             authority: "%s",
                             client_id: "%s"
                         },
+                        %s
                         uiConfig: %s
                     }
-                };""".formatted(config.apiUrl(), config.authority(), config.clientId(),
+                };""".formatted(config.apiUrl(), config.authority(), config.clientId(), formatAdditionalProperties(),
                 // Simply dumping json into javascript via string templating is icky, but will probably be fine for now
                 config.uiConfig());
+    }
+
+    private String formatAdditionalProperties() {
+        return properties.getAdditionalProperties().entrySet().stream()
+                        .map(e -> String.format("%s: \"%s\",", e.getKey(), e.getValue()))
+                        .collect(Collectors.joining("\n        "));
     }
 }

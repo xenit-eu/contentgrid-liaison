@@ -9,11 +9,13 @@ gateway will route that to liaison, which will respond with a javascript file
 that looks like this:
 
 ```js
-window.config = {
-    baseUrl: "https://12345678-9abc-def0-1234-56789abcdef0.contentgrid.cloud/",
-    oidc: {
-        authority: "https://auth.contentgrid.com/realms/cg-12345678-9abc-def0-1234-56789abcdef0",
-        client_id: "my-webapp",
+window.contentGridConfig = {
+    v1: {
+        baseUrl: "https://12345678-9abc-def0-1234-56789abcdef0.contentgrid.cloud/",
+        oidc: {
+            authority: "https://auth.contentgrid.com/realms/cg-12345678-9abc-def0-1234-56789abcdef0",
+            client_id: "my-webapp",
+        }
     }
 };
 ```

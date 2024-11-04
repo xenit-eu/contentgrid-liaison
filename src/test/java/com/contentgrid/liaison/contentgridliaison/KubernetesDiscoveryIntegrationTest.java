@@ -119,8 +119,7 @@ public class KubernetesDiscoveryIntegrationTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType("text/javascript")
-                .expectBody(new ParameterizedTypeReference<String>() {
-                }).returnResult().getResponseBody();
+                .expectBody(new ParameterizedTypeReference<String>(){}).returnResult().getResponseBody();
 
         executeJS(configJS, window -> {
             Assertions.assertThat(window.getMember("contentGridConfig")
@@ -287,7 +286,7 @@ public class KubernetesDiscoveryIntegrationTest {
     }
 
 
-    private void executeJS(String configJS, Consumer<Value> windowAssertion) {
+    public static void executeJS(String configJS, Consumer<Value> windowAssertion) {
         // Initialize GraalVM context
         try (Context context = Context.create()) {
             context.eval("js", "var window = {};");
