@@ -38,7 +38,7 @@ dependencies {
 	testImplementation "org.testcontainers:k3s"
 	testImplementation 'org.awaitility:awaitility'
 	testImplementation group: 'org.graalvm.js', name: 'js', version: '24.2.0'
-	testImplementation group: 'org.graalvm.js', name: 'js-scriptengine', version: '24.1.2'
+	testImplementation group: 'org.graalvm.js', name: 'js-scriptengine', version: '24.2.0'
 }
 
 tasks.named('test') {
