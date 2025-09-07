@@ -1,4 +1,4 @@
 plugins {
-    id 'eu.xenit.enterprise-conventions.private' version '0.6.1'
+    id 'eu.xenit.enterprise-conventions.private' version '0.6.2'
 }
 rootProject.name = 'contentgrid-liaison'
