@@ -86,7 +86,7 @@ public class KubernetesDiscovery {
                         var firstDomain = cm.getData().getOrDefault(DOMAINS_KEY, "").split(DOMAINS_SEPARATOR)[0];
                         var appId = cm.getMetadata().getLabels().get(APPLICATION_ID_LABEL);
                         if (firstDomain.isEmpty() || appId == null || appId.isEmpty()) {
-                            log.debug("Incomplete configmap {}, not registering", cm.getFullResourceName());
+                            log.debug("Incomplete configmap {}, not registering", cm.getMetadata().getName());
                             return;
                         }
                         gatewayCfgmaps.put(appId, new GatewayCfgmap(appId, "https://" + firstDomain));
