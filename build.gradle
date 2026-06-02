@@ -2,6 +2,8 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.14'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco'
+	id 'org.sonarqube'
 }
 
 group = 'com.contentgrid.liaison'
@@ -73,3 +75,16 @@ bootRun {
 	args = ["--spring.profiles.active=bootRun"]
 }
 
+jacocoTestReport {
+	reports {
+		xml.required = true
+	}
+}
+
+sonarqube {
+	properties {
+		property "sonar.projectKey", "contentgrid-liaison"
+		property "sonar.organization", "xenit-eu"
+		property "sonar.host.url", "https://sonarcloud.io"
+	}
+}

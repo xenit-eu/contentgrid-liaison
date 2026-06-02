@@ -1,3 +1,9 @@
+pluginManagement {
+    plugins {
+        id 'org.sonarqube' version '7.3.0.8198'
+    }
+}
+
 plugins {
     id 'eu.xenit.enterprise-conventions.private' version '0.7.0'
     id 'org.ajoberstar.reckon.settings' version '2.0.0'
