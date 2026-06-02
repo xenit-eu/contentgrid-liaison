@@ -7,7 +7,9 @@ plugins {
 group = 'com.contentgrid.liaison'
 
 java {
-	sourceCompatibility = '17'
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
 }
 
 configurations {
