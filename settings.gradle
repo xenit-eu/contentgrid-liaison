@@ -11,3 +11,4 @@ reckon {
     scopeCalc = calcScopeFromCommitMessages()
     stageCalc = { inventory, targetNormal -> java.util.Optional.empty() }
 }
+
