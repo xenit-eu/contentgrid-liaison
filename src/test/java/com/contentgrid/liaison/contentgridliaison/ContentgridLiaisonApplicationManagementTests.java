@@ -28,7 +28,7 @@ import org.testcontainers.utility.DockerImageName;
                 "management.prometheus.metrics.export.enabled=true"
                 //bootRun profile disables metrics, which is fine for other tests but should be overridden here
         })
-public class ContentgridLiaisonApplicationManagementTests {
+class ContentgridLiaisonApplicationManagementTests {
 
     @LocalManagementPort
     private int managementPort;
