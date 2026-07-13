@@ -32,7 +32,7 @@ dependencies {
 	}
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'io.fabric8:kubernetes-client:7.7.0'
+	implementation 'io.fabric8:kubernetes-client:7.8.0'
 
 	runtimeOnly ('io.micrometer:micrometer-registry-prometheus'){
 		because "Trigger prometheus registry autoconfiguration & activate prom metrics endpoint. ACC-2942"
