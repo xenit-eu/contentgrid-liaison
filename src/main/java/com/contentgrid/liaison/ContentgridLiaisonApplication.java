@@ -4,7 +4,6 @@ import com.contentgrid.liaison.config.LiaisonProperties;
 import com.contentgrid.liaison.kubernetes.KubernetesDiscovery;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
-import io.fabric8.kubernetes.client.impl.KubernetesClientImpl;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
